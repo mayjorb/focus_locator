@@ -1,0 +1,220 @@
+<?php
+/**
+ * @file
+ * Code for the OpenLayers Locator feature.
+ */
+
+include_once('focus_locator.features.inc');
+
+
+/**
+ * Implements hook_leaflet_map_info_alter().
+ * Set default zoom to 15 instead of 18
+ */
+
+function focus_locator_leaflet_map_info_alter(&$map_info) {
+  dpm($map_info,'map info');
+  foreach ($map_info as $map_id => $info) {
+    $map_info[$map_id]['settings']['maxZoom'] = 15;
+  }
+}
+
+
+if (isset($_SESSION['ip_geoloc']['location']['locality']) && isset($_SESSION['ip_geoloc']['location']['administrative_area_level_1'])) {
+    $city_state = $_SESSION['ip_geoloc']['location']['locality'] . ', ' . $_SESSION['ip_geoloc']['location']['administrative_area_level_1'];
+  }
+  else {
+    $city_state = t('Newport, OR');
+  }
+
+
+/**
+* hook_views_pre_view
+* @param type $view
+* @param type $display_id
+* @param type $args
+*/
+// function focus_locator_views_pre_view(&$view, &$display_id, &$args) {
+//   if ($view->name == 'focus_locator_proximity_search') {
+//     $filters = $view->display_handler->get_option('filters');   
+//     $view->display_handler->override_option('filters', $filters);
+
+//     dpm($views);
+//   }
+// }
+
+
+
+/**
+* hook__views_pre_build
+* @param type $view
+* @return type
+*/
+// function focus_locator_views_pre_build($view) {
+//   if ($view->name=='views_exposed_form') {   
+//     $view->display['views-exposed-form-focus-locator-proximity-search-bike']->handler->handlers['filter']['field_geofield_distance']->value['value'] = 8;
+//     return $view;
+//   }    
+// }
+
+/**
+ * Implementation of hook_views_pre_view().
+ */
+function focus_locator_views_get_view(&$view) {
+
+  $view = views_get_view('focus_locator_proximity_search');
+  $view->set_display('bike');
+  $view->is_cacheable = FALSE;  
+  $view->exposed_input['filter_1_exposed_input_name'] = "value1";
+  $view->exposed_input['filter_2_exposed_input_name'] = "value2";
+  dpm($view->render());
+
+  if ($view->name == 'focus_locator_proximity_search') {
+    drupal_set_message(t('the view name is focus-locator-proximity-search'));
+    // $view->display['default']->handler->options['sorts']['title']['order'] = 'DESC';
+  }
+  else {
+    drupal_set_message(t('the view name IS NOT focus-locator-proximity-search'));
+  }
+  return $view;
+}
+
+function focus_locator_views_embed_view($name, $display_id = 'views-exposed-form-focus-locator-proximity-search-bike') {
+  $args = func_get_args();
+  array_shift($args); // remove $name
+  if (count($args)) {
+    array_shift($args); // remove $display_id
+  }
+  $view = views_get_view($name);
+  if (!$view || !$view->access($display_id)) {
+    return;
+  }
+  return $view->preview($display_id, $args);
+  dpm($view->preview($display_id, $args));
+}
+
+
+
+
+
+
+// $view = views_get_view('focus_locator_proximity_search');
+//   $view->set_display('bike');
+//   $view->is_cacheable = FALSE;  
+//   $view->execute();  
+//   dpm($view->exposed_raw_input);
+
+
+function focus_locator_form_alter(&$form, &$form_state, $form_id) {
+  
+  if (isset($_SESSION['ip_geoloc']['location']['locality']) && isset($_SESSION['ip_geoloc']['location']['administrative_area_level_1'])) {
+    $city_state = $_SESSION['ip_geoloc']['location']['locality'] . ', ' . $_SESSION['ip_geoloc']['location']['administrative_area_level_1'];
+  }
+  else {
+    $city_state = t('Newport, OR');
+  }
+
+
+
+  switch ($form_id) {
+    
+    case 'views_exposed_form':
+      
+      //dpm($form['views-exposed-form-focus-locator-proximity-search-bike'], 'form-focus-locator-proximity-search-bike');
+
+      if ($form['#id'] == 'views-exposed-form-focus-locator-proximity-search-bike'   || 
+        $form['#id'] == 'views-exposed-form-focus-locator-proximity-search-climb'    || 
+        $form['#id'] == 'views-exposed-form-focus-locator-proximity-search-golf'     || 
+        $form['#id'] == 'views-exposed-form-focus-locator-proximity-search-paddle'   || 
+        $form['#id'] == 'views-exposed-form-focus-locator-proximity-search-skate'    || 
+        $form['#id'] == 'views-exposed-form-focus-locator-proximity-search-snow'     || 
+        $form['#id'] == 'views-exposed-form-focus-locator-proximity-search-surf'     ||
+        $form['#id'] == 'views-exposed-form-focus-locator-proximity-search-deals'    ||
+        $form['#id'] == 'views-exposed-form-focus-locator-proximity-search-lodging'  ||
+        $form['#id'] == 'views-exposed-form-focus-locator-proximity-search-deals-by-sport') {    
+
+
+
+        //dpm($views, 'form');
+        // Using dpm with Devel installed to give me array data on the Views form
+       
+        $form['submit'] = array(
+          '#type' => 'image_button',
+          '#src' => drupal_get_path('module', 'focus_locator') .'/images/go_btn.png',
+        );
+
+        // $form['field_geofield_distance']['unit']['#attributes']['disabled'] = 'disabled';
+        // $form['field_geofield_distance']['unit']= array(
+        //   '#type' => 'checkbox',
+        //   );
+
+        // $form['field-geofield-distance']['unit'] = array(
+        //   '#type' => 'select',
+        //   '#options' => geofield_radius_options(),
+        //   '#title' => t('Unit'),
+        //   '#default_value' => !empty($element['#default_value']['unit']) ? $element['#default_value']['unit'] : GEOFIELD_MILES,
+        //   '#title_display' => 'visible',
+        // );
+
+        
+
+          //Create dropdown for units
+  // $element['unit'] = array(
+  //   '#type' => 'select',
+  //   '#options' => geofield_radius_options(),
+  //   '#title' => t('Unit'),
+  //   '#default_value' => !empty($element['#default_value']['unit']) ? $element['#default_value']['unit'] : GEOFIELD_KILOMETERS,
+  //   '#title_display' => 'invisible',
+  // );
+        // $form['field_geofield_unit']['#disabled'] = true;
+
+        //$form['field_geofield_distance']['#default_value']['origin'] = t($city_state);
+
+
+        $form['field_geofield_distance']['#default_value']['distance'] = t('20');
+
+        $form['field_geofield_distance']['#field_prefix'] = t('<span id="findme"><a href="#" id="findme-link">FIND ME</a> or search </span>');
+
+        //$form['field_geofield_distance']['#field_prefix'] = t(' + ');
+
+        // $form['field_geofield_distance']['#size'] = 14;
+
+        //$form['field-geofield-distance-unit']['value']);
+        // $form['circle']['value']['#default_value'] = 50;
+        //edit-field-geofield-distance-unit
+        // $form['circle']['location']['#size'] = 14; 
+        // $form['circle']['location']['#default_value'] = $city_state; 
+        // $form['circle']['location']['#field_prefix'] = '+'; 
+
+        // $form['circle']['value']['#field_prefix'] =  t('<span id="findme"><a href="#" id="findme-link">FIND ME</a></span> or search '); 
+        // $form['circle']['value']['#field_suffix'] = t('mi '); 
+      }
+      
+      if ($form['#id'] == 'views-exposed-form-feed-display-combined-feed') {
+        $form['tid']['#options']['All'] = t(' - all sports - ');
+        //dpm($form);
+      }
+      
+    break;
+
+    case 'focus_locator_form':
+      
+
+      // unset delete button for non-admins
+      global $user;
+      if (!in_array('administrator', array_values($user->roles)) && !in_array('site manager', array_values($user->roles)) ) { 
+        //unset($form['#groups']['group_places_id']);
+        //unset($form['#groups']['group_op_buttons']);
+        //unset($form['field_location_type']);
+        unset($form['field_factual_id']['und'][0]['value']);
+        unset($form['field_places_id']['und'][0]['value']);
+        //unset($form['field_gozulla_subscription']['und']);
+        unset($form['revision_information']);
+      }
+
+      //group_places_id
+
+      //dpm($form);
+      break;
+  }
+}

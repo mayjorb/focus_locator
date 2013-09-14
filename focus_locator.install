@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * focus_locator.install
+*/
+
+/**
+* Implementation of hook_install()
+*/
+function focus_locator_install() {
+  variable_set('focus_locator_factual_key', '');
+  variable_set('focus_locator_factual_secret', '');
+  // variable_set('gozulla_directory_bad_factual_ids', '');
+}
+
+/**
+* Implementation of hook_uninstall()
+*/
+function focus_locator_uninstall() {
+  // Remove the module from the system table
+  db_query("DELETE FROM {system} WHERE `name` = 'focus_locator'");
+  db_query("DELETE FROM {variable} WHERE `name` LIKE 'focus_locator_%'");
+}
